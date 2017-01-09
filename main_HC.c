@@ -15,6 +15,15 @@
 #define HS_TX_PIN2_DDR   SBIT( DDRA, 7)
 #define HS_TX_PIN1       SBIT( PORTA, 6)
 #define HS_TX_PIN2       SBIT( PORTA, 7)
+#define HS_SET_TX_PINS( p1, p2) /* 8 clk */ \
+{ \
+  	  HS_TX_PIN1 = 0; /* reset cap */ \
+  	  HS_TX_PIN2 = 0; /* reset cap */ \
+	  wait_us( 0.25); \
+  	  HS_TX_PIN1 = p1; \
+  	  HS_TX_PIN2 = p2; \
+}
+//#define HS_TX_PINS( p1, p2, add_timeout)
 
 #define HS_ECHO_PIN  BIT4
 #define HS_ECHO_AIN  2
@@ -71,25 +80,20 @@ uint8 HS_SCAN()
 
   //***************************************************************************
   // 8 SCAN PULSEs
-  HS_TX_PIN1 = 0;
-  HS_TX_PIN2 = 0;
+  HS_SET_TX_PINS( 0, 0);
   wait_us( 10);
   for( uint8 q = 0; q < 8; q++)
   {
-  	  HS_TX_PIN1 = 1;
-  	  HS_TX_PIN2 = 0;
-  	  wait_us2( 1000000.0 / HS_TX_FREQ / 2, 2);// -2 clk = port io
-  	  HS_TX_PIN1 = 0;
-  	  HS_TX_PIN2 = 1;
-  	  wait_us2( 1000000.0 / HS_TX_FREQ / 2, 5);// -5 clk = port io + for routine
+	  HS_SET_TX_PINS( 1, 0);
+  	  wait_us2( 1000000.0 / HS_TX_FREQ / 2, 8);// -8 clk = port io
+  	  HS_SET_TX_PINS( 0, 1);
+  	  wait_us2( 1000000.0 / HS_TX_FREQ / 2, 8 + 3);// -8 + 3 clk = port io + for routine
   }
   // Send 1 clk anti phase || Active damping
-  wait_us2( 1000000.0 / HS_TX_FREQ / 2, 2);// -5 clk = port io + for routine
-  HS_TX_PIN1 = 1;
-  HS_TX_PIN2 = 0;
-  wait_us2( 1000000.0 / HS_TX_FREQ / 2, 2);// -2 clk = port io
-  HS_TX_PIN1 = 0;
-  HS_TX_PIN2 = 0;
+  wait_us2( 1000000.0 / HS_TX_FREQ / 2, 8);// -8 clk = port io + for routine
+  HS_SET_TX_PINS( 1, 0);
+  wait_us2( 1000000.0 / HS_TX_FREQ / 2, 8);// -8 clk = port io
+  HS_SET_TX_PINS( 0, 0);
   //***************************************************************************
 
 
