@@ -1,5 +1,6 @@
 #include <avr/io.h>
 #include <avr/wdt.h>
+#include <avr/eeprom.h>
 
 #include "sbit.h"
 
@@ -41,6 +42,25 @@
 #define ADCSRA_ADIF  SBIT( ADCSRA, 4) /*ADIF*/
 
 
+
+
+
+
+
+// US sensor button
+uint16 _btn;
+#define isBTN()   ( _btn < ( 15 * HS_ECHO_SKIP_SAMPLES))
+
+
+uint16 EEMEM p_amb_light_trig = 150 * 64;
+
+
+
+
+
+
+
+
 void HS_init()
 {
   PORTB &= ~HS_ECHO_PIN;
@@ -54,6 +74,7 @@ void HS_init()
 uint8 HS_SCAN()
 {
   uint16 ref_level = 0;
+  uint16 _adc;
   uint8 q;
   uint8 qc;
 
@@ -97,12 +118,17 @@ uint8 HS_SCAN()
   //***************************************************************************
 
 
-  //Skip N samples
+  //Skip N samples + BTN logic
+  _btn = 0;
   for( q = 0; q < HS_ECHO_SKIP_SAMPLES; q++)
   {
     // ADSC is cleared when the conversion finishes
     while( !ADCSRA_ADIF);
     ADCSRA_ADIF = 1;
+
+    _adc = ADC;
+    if( _adc > ref_level)
+      _btn += ( _adc - ref_level);
   }
 
   // Sampling ECHO
@@ -119,11 +145,15 @@ uint8 HS_SCAN()
   return qc;
 }
 
+
+
 //main Func
 int main()
 {
   uint8 light_off_delay = 0;
   uint8 ll = 0;
+  uint16 amb_light = 0;
+  uint16_t amb_light_trig;
 
   wdt_reset();
   /* Start timed sequence */
@@ -137,32 +167,60 @@ int main()
 
   light_init();
   HS_init();
+  amb_light_trig = eeprom_read_word( &p_amb_light_trig);
 
   
   while( 1)
   {
     wdt_reset();
 
-    if( HS_SCAN() > 7)
+/*
+HS_SCAN();
+if( isBTN())
+light_brightness_up();
+else
+light_brightness_down();
+*/
+    if( get_ligth_state() == LIGHT_OFF)
+      amb_light = get_light_sensor();
+
+    if( ( HS_SCAN() > 7) || isBTN()) // !!! CONST !!!
     {
-//      PORTB &= ~LED_PIN;
-      light_off_delay = LIGHT_DELAY_OFF;
-      light_on();
+        if( amb_light < amb_light_trig)
+        {
+          light_off_delay = LIGHT_DELAY_OFF;
+          light_on();
+        }
     }
     else
     {
-//      PORTB |= LED_PIN;
-      
       if( light_off_delay == 0)
         ll = light_brightness_down();
       else
         light_off_delay--;
     }
 
+    if( isBTN())
+    {
+    	if( get_ligth_state() == LIGHT_OFF)
+    	{
+    		amb_light_trig = amb_light + 10 * 64;
+//    		eeprom_write_word( &p_amb_light_trig, amb_light_trig);
+    	}
+    	else
+        	if( get_ligth_state() == LIGHT_ON)
+        	{
+        		amb_light_trig = amb_light - 10 * 64;
+//        		eeprom_write_word( &p_amb_light_trig, amb_light_trig);
+        		light_off_delay = 0; // Force light off
+                light_off();
+        	}
+    }
+
    
     
     if( light_off_delay == LIGHT_DELAY_OFF)
-      wait_ms( 3000);
+      wait_ms( 1000);
     else
     {
       if( ll > 0)

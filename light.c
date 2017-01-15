@@ -8,6 +8,9 @@
 #include "def_types.h"
 #include "config.h"
 
+
+#define ADCSRA_ADIF  SBIT( ADCSRA, 4) /*ADIF*/
+
 int16 light_brightness = 0;
 
 
@@ -18,6 +21,41 @@ void light_init()
 
   TCCR1A = 0;
   light_brightness = 0;
+}
+
+uint16 get_light_sensor()
+{
+  uint8 q;
+  uint16 ret;
+
+  ADMUX = 0x01; // ADC1( PA1) | Vref = VCC
+  ADCSRB = 0x00; // Free mode
+  ADCSRA = 0xE6; // start the conversion | ~9.3 ksps
+
+  //Skip first sample
+  ADCSRA_ADIF = 1;
+  while( !ADCSRA_ADIF);
+  ADCSRA_ADIF = 1;
+
+  ret = 0;
+  for( q = 0; q < 64; q++)
+  {
+    // ADSC is cleared when the conversion finishes
+    while( !ADCSRA_ADIF);
+    ADCSRA_ADIF = 1;
+
+    ret += ADC;
+  }
+  return ret;
+}
+
+uint8 get_ligth_state()
+{
+	if( light_brightness <= 0)
+		return LIGHT_OFF;
+	if( light_brightness >= 255)
+		return LIGHT_ON;
+	return LIGHT_PWM;
 }
 
 void light_on()

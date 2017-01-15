@@ -32,15 +32,17 @@ typedef unsigned long UREG32;
 typedef signed   long REG32;
 
 
-#define uint8  unsigned char
-#define int8   signed char        
+#define uint8	unsigned char
+#define int8	signed char
 
-#define uint16 unsigned short
-#define int16  signed short
+#define uint16	unsigned short
+#define int16	signed short
 
-#define uint32 unsigned long
-#define int32  signed long
+#define uint32	unsigned long
+#define int32	signed long
 
-#define BOOL   char
+#define BOOL	char
+#define TRUE	1
+#define FALSE	1
 
 #endif
