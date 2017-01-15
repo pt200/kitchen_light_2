@@ -15,10 +15,10 @@ enum
 };
 
 void light_init();
-uint16 get_light_sensor();
-uint8 get_ligth_state();
-uint8 light_brightness_up();
-uint8 light_brightness_down();
+uint16_t get_light_sensor();
+uint8_t get_ligth_state();
+uint8_t light_brightness_up();
+uint8_t light_brightness_down();
 void light_on();
 void light_off();
 

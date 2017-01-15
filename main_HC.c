@@ -48,11 +48,11 @@
 
 
 // US sensor button
-uint16 _btn;
+uint16_t _btn;
 #define isBTN()   ( _btn < ( 15 * HS_ECHO_SKIP_SAMPLES))
 
 
-uint16 EEMEM p_amb_light_trig = 150 * 64;
+uint16_t EEMEM p_amb_light_trig = 150 * 64;
 
 
 
@@ -71,12 +71,12 @@ void HS_init()
   HS_TX_PIN2_DDR = 1;
 }
 
-uint8 HS_SCAN()
+uint8_t HS_SCAN()
 {
-  uint16 ref_level = 0;
-  uint16 _adc;
-  uint8 q;
-  uint8 qc;
+  uint16_t ref_level = 0;
+  uint16_t _adc;
+  uint8_t q;
+  uint8_t qc;
 
   ADMUX = 0x00; // ADC0( PA0) | Vref = VCC
   ADCSRB = 0x00; // Free mode
@@ -103,7 +103,7 @@ uint8 HS_SCAN()
   // 8 SCAN PULSEs
   HS_SET_TX_PINS( 0, 0);
   wait_us( 10);
-  for( uint8 q = 0; q < 8; q++)
+  for( uint8_t q = 0; q < 8; q++)
   {
 	  HS_SET_TX_PINS( 1, 0);
   	  wait_us2( 1000000.0 / HS_TX_FREQ / 2, 8);// -8 clk = port io
@@ -150,9 +150,9 @@ uint8 HS_SCAN()
 //main Func
 int main()
 {
-  uint8 light_off_delay = 0;
-  uint8 ll = 0;
-  uint16 amb_light = 0;
+  uint8_t light_off_delay = 0;
+  uint8_t ll = 0;
+  uint16_t amb_light = 0;
   uint16_t amb_light_trig;
 
   wdt_reset();

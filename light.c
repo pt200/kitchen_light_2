@@ -23,10 +23,10 @@ void light_init()
   light_brightness = 0;
 }
 
-uint16 get_light_sensor()
+uint16_t get_light_sensor()
 {
-  uint8 q;
-  uint16 ret;
+  uint8_t q;
+  uint16_t ret;
 
   ADMUX = 0x01; // ADC1( PA1) | Vref = VCC
   ADCSRB = 0x00; // Free mode
@@ -49,7 +49,7 @@ uint16 get_light_sensor()
   return ret;
 }
 
-uint8 get_ligth_state()
+uint8_t get_ligth_state()
 {
 	if( light_brightness <= 0)
 		return LIGHT_OFF;
@@ -76,7 +76,7 @@ void light_off()
   }
 }
 
-uint8 light_brightness_up()
+uint8_t light_brightness_up()
 {
   light_brightness += ( light_brightness >> 2) + 1;
 
@@ -96,7 +96,7 @@ uint8 light_brightness_up()
   }
 }
 
-uint8 light_brightness_down()
+uint8_t light_brightness_down()
 {
   light_brightness -= ( light_brightness >> 4) + 1;
 
