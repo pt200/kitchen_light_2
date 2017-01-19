@@ -1,6 +1,6 @@
 #include <avr/io.h>
 #include <avr/wdt.h>
-#include <avr/eeprom.h>
+//#include <avr/eeprom.h>
 
 #include "sbit.h"
 
@@ -52,7 +52,7 @@ uint16_t _btn;
 #define isBTN()   ( _btn < ( 15 * HS_ECHO_SKIP_SAMPLES))
 
 
-uint16_t EEMEM p_amb_light_trig = 150 * 64;
+//uint16_t EEMEM p_amb_light_trig = 150 * 64;
 
 
 
@@ -147,13 +147,26 @@ uint8_t HS_SCAN()
 
 
 
+enum
+{
+  USER_NONE,
+  USER_ON,
+  USER_OFF
+};
+
+#define USER_CMD_TIMEOUT	( 1200 * 10UL)
+#define HS_TRIG_LEVEL		7
+
 //main Func
 int main()
 {
   uint8_t light_off_delay = 0;
   uint8_t ll = 0;
   uint16_t amb_light = 0;
-  uint16_t amb_light_trig;
+
+  uint8_t user_cmd = USER_NONE;
+  uint16_t user_cmd_timeout = 0;
+//  uint16_t amb_light_trig;
 
   wdt_reset();
   /* Start timed sequence */
@@ -167,26 +180,21 @@ int main()
 
   light_init();
   HS_init();
-  amb_light_trig = eeprom_read_word( &p_amb_light_trig);
 
+//  amb_light_trig = 150*64;//eeprom_read_word( &p_amb_light_trig);
+#define   amb_light_trig  ( 350 * 64)
   
   while( 1)
   {
     wdt_reset();
 
-/*
-HS_SCAN();
-if( isBTN())
-light_brightness_up();
-else
-light_brightness_down();
-*/
     if( get_ligth_state() == LIGHT_OFF)
       amb_light = get_light_sensor();
 
-    if( ( HS_SCAN() > 7) || isBTN()) // !!! CONST !!!
+    if( ( ( HS_SCAN() > HS_TRIG_LEVEL) || isBTN()) && ( user_cmd != USER_OFF)) // !!! CONST !!!
     {
-        if( amb_light < amb_light_trig)
+        if( ( ( amb_light < amb_light_trig) && ( user_cmd != USER_OFF))
+        	|| ( user_cmd == USER_ON))
         {
           light_off_delay = LIGHT_DELAY_OFF;
           light_on();
@@ -200,21 +208,32 @@ light_brightness_down();
         light_off_delay--;
     }
 
+
+    if( user_cmd_timeout > 0)
+    	user_cmd_timeout--;
+    else
+    	user_cmd = USER_NONE;
+
     if( isBTN())
     {
-    	if( get_ligth_state() == LIGHT_OFF)
+    	if( user_cmd_timeout < ( USER_CMD_TIMEOUT - 5)) // BTN front detect
     	{
-    		amb_light_trig = amb_light + 10 * 64;
+    		if( get_ligth_state() == LIGHT_OFF)
+    		{
+    			user_cmd = USER_ON;
+//    		amb_light_trig = amb_light + 10 * 64;
 //    		eeprom_write_word( &p_amb_light_trig, amb_light_trig);
-    	}
-    	else
-        	if( get_ligth_state() == LIGHT_ON)
-        	{
-        		amb_light_trig = amb_light - 10 * 64;
+    		}
+    		else
+    			if( get_ligth_state() == LIGHT_ON)
+    			{
+    				user_cmd = USER_OFF;
+//        		amb_light_trig = amb_light - 10 * 64;
 //        		eeprom_write_word( &p_amb_light_trig, amb_light_trig);
-        		light_off_delay = 0; // Force light off
-                light_off();
-        	}
+    				light_off_delay = 0; // Force light off
+    			}
+    	}
+    	user_cmd_timeout = USER_CMD_TIMEOUT;
     }
 
    
