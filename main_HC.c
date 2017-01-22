@@ -156,6 +156,7 @@ enum
 
 #define USER_CMD_TIMEOUT	( 1200 * 10UL)
 #define HS_TRIG_LEVEL		7
+#define amb_light_trig  ( 70 * 64)
 
 //main Func
 int main()
@@ -182,7 +183,6 @@ int main()
   HS_init();
 
 //  amb_light_trig = 150*64;//eeprom_read_word( &p_amb_light_trig);
-#define   amb_light_trig  ( 350 * 64)
   
   while( 1)
   {
